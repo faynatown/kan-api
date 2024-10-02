@@ -1,2 +1,3 @@
 # kan-api
-KAN application closed API docs
+
+Закрите API застосунку KAN. PR з додаванням інших шляхів вітаються.

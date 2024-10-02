@@ -1,0 +1,646 @@
+openapi: 3.0.3
+info:
+  title: KAN API
+  version: 1.0.0
+  description: API for [KAN application](https://apps.apple.com/ua/app/kan/id1409608261).
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Version:
+      name: version
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "2.3.11"
+      description: Application version
+  responses:
+    Unauthorized:
+      description: Unauthorized - Bearer token missing or invalid
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            example: "Bearer error=\"invalid_token\""
+tags:
+  - name: gek
+    description: Issues to the management company
+servers:
+  - url: http://app.faynatown.com.ua
+paths:
+  /api/auth/login:
+    post:
+      summary: User login
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                PhoneNumber:
+                  type: string
+                  example: "380123456789"
+                Password:
+                  type: string
+                  example: "123123123"
+              required:
+                - PhoneNumber
+                - Password
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMGRkYzEwZi0wNjY5LTQyY2QtYWQxZi0xY2U5MmFlZWNhZDIiLCJqdGkiOiJkNmI1OGJiOS02M2YyLTRlZGEtODJkZS0zM2NiMGEzM2Q5NTYiLCJpc3MiOiJodHRwOi8vYXBwLmZheW5hdG93bi5jb20udWEiLCJhdWQiOiJodHRwOi8vYXBwLmZheW5hdG93bi5jb20udWEiLCJleHAiOjE3MzUyOTY2MjUsImlhdCI6MTYzNTI5NjYyNX0.Ol-4IFaBJjNaicHLHwJeq9hf9wsoBgPLj7ZHLj48yAs"
+      tags:
+        - auth
+  /api/user/get:
+    get:
+      summary: Get user information
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "30ddc10f-0669-42cd-ad1f-1ce92aeecad8"
+                  email:
+                    type: string
+                    example: "taras.shevchenko@gmail.com"
+                  phoneNumber:
+                    type: string
+                    example: "380123456789"
+                  fullName:
+                    type: string
+                    example: "Шевченко Тарас Григорович"
+                  flats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "4feced5b-89e3-48e9-b7f8-3f64836b1ba1"
+                        userFlatId:
+                          type: string
+                          example: "4feced5b-89e3-48e9-b7f8-3f64836b1ba1"
+                        complexId:
+                          type: integer
+                          example: 1
+                        complex:
+                          type: string
+                          example: "Файна Таун"
+                        houseNum:
+                          type: string
+                          example: "1"
+                        flatNumber:
+                          type: string
+                          example: "111"
+                        gekAccountNumber:
+                          type: string
+                          example: "1111111"
+                        unitTypeName:
+                          type: string
+                          example: "кв."
+                        unitTypeFullName:
+                          type: string
+                          example: "Квартира"
+                        unitTypeId:
+                          type: integer
+                          example: 1
+                        isApproved:
+                          type: boolean
+                          example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - user
+  /api/user/NotificationTokenRefresh:
+    post:
+      summary: Refresh the notification token for a user
+      description: This endpoint refreshes the notification token.
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The new notification token that needs to be refreshed.
+                  example: "-ODloV3GnUfRyT0Lahu5:LPpJcDf_nsF8:M-IsQk1GTRBGsunuCBQ6ljc8bhPgIULIAN2DuIUelHhoN6_b-itq63lr1cV4jg26fKgnZiURD14ZUkGPpdm3GDEJCx8-xWUWXSDVHRqxSHYDkh-rHIwhqugu"
+              required:
+                - token
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - user
+  /api/template/getBalance:
+    get:
+      summary: Get current balance
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: Balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    format: double
+                    example: 0.00
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - template
+  /api/Gek/GetIssues:
+    get:
+      summary: Get issues by filters
+      parameters:
+        - name: isActive
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["True", "False"]
+            example: True
+        - name: dateFrom
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-09-01"
+        - name: dateTo
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-09-28 23:59:59"
+        - $ref: '#/components/parameters/Version'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Issues retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "11111"
+                    category:
+                      type: string
+                      example: "Паркування"
+                    categoryItem:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 45
+                        name:
+                          type: string
+                          example: "Паркування"
+                    subject:
+                      type: string
+                      example: "Порушник"
+                    deskription:
+                      type: string
+                      example: "Це авто порушило"
+                    status:
+                      type: string
+                      example: "Нова"
+                    statusItem:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 2
+                        name:
+                          type: string
+                          example: "Нова"
+                    created:
+                      type: string
+                      format: date-time
+                      example: "2024-09-28T12:51:30+03:00"
+                    projectId:
+                      type: integer
+                      example: 4
+                    complexId:
+                      type: integer
+                      example: 1
+                    complexName:
+                      type: string
+                      example: "Файна Таун"
+                    address:
+                      type: object
+                      properties:
+                        houseNum:
+                          type: string
+                          example: "1"
+                        flatNumber:
+                          type: string
+                          example: "111"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - gek
+  /api/Gek/GetIssue:
+    get:
+      summary: Get issue by ID
+      parameters:
+        - name: issueId
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 28515
+        - $ref: '#/components/parameters/Version'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Issue retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "28515"
+                  category:
+                    type: string
+                    example: "Паркування"
+                  categoryItem:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 45
+                      name:
+                        type: string
+                        example: "Паркування"
+                  subject:
+                    type: string
+                    example: "Порушник"
+                  deskription:
+                    type: string
+                    example: "Це авто порушує"
+                  status:
+                    type: string
+                    enum: 
+                      - "Нова"
+                      - "Виконано"
+                      - "Відхилено Мешканцем"
+                    example: "Виконано"
+                  statusItem:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        enum: [2, 4, 8]
+                        example: 4
+                      name:
+                        type: string
+                        enum: ["Нова", "В процесі виконання", "Виконано", "Відхилено Мешканцем"]
+                        example: "Виконано"
+                  created:
+                    type: string
+                    format: date-time
+                    example: "2024-08-04T11:38:07+03:00"
+                  projectId:
+                    type: integer
+                    example: 4
+                  complexId:
+                    type: integer
+                    example: 1
+                  complexName:
+                    type: string
+                    example: "Файна Таун"
+                  rating:
+                    type: integer
+                    example: 1
+                  address:
+                    type: object
+                    properties:
+                      complexId:
+                        type: integer
+                        example: 1
+                      complex:
+                        type: string
+                        example: "Файна Таун"
+                      houseNum:
+                        type: string
+                        example: "1"
+                      flatNumber:
+                        type: string
+                        example: "111"
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user:
+                          type: string
+                          example: "Taras Shevchenko"
+                        notes:
+                          type: string
+                          example: "коментар"
+                        created:
+                          type: string
+                          format: date-time
+                          example: "2024-08-05T12:10:37+03:00"
+                        status:
+                          type: string
+                          example: "В процесі виконання"
+                        isAnswer:
+                          type: boolean
+                          example: true
+                  attachments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                          example: "IMG_1122360284259.jpg"
+                        fileSize:
+                          type: integer
+                          example: 5174934
+                        description:
+                          type: string
+                          example: ""
+                        contentUrl:
+                          type: string
+                          example: "http://192.168.0.2:8888/attachments/download/22222/IMG_1122360284259.jpg"
+                        author:
+                          type: string
+                          example: "Redmine Admin"
+                        createdOn:
+                          type: string
+                          format: date-time
+                          example: "2024-08-04T11:38:07+03:00"
+                        thumbnailUrl:
+                          type: string
+                          example: "http://192.168.0.2:8888/attachments/thumbnail/22222"
+                        thumbnail:
+                          type: string
+                          example: "/9j/4DHiNoopNpGjg8PsGjhAmXiye2sqcyV5ik..."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - gek
+  # yep, letter letter "с" in "сreateIssueWithAttachment" is cyrillic, so we need to encode it as %D1%81 
+  /api/gek/%D1%81reateIssueWithAttachment:
+    post:
+      summary: Create an issue with an attachment
+      description: Allows users to create an issue with an image attachment.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  description: The image files to be attached to the issue.
+                  items:
+                    type: string
+                    format: binary
+                data:
+                  type: object
+                  properties:
+                    UserFlatId:
+                      type: string
+                      example: "4feced5b-89e3-48e9-b7f8-3f64836b1ba1"
+                    CategoryId:
+                      type: integer
+                      example: 45
+                    Subject:
+                      type: string
+                      example: "порушник"
+                    Description:
+                      type: string
+                      example: "порушник текст\n"
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: Issue created successfully with details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "11111"
+                  category:
+                    type: string
+                    example: "Паркування"
+                  categoryItem:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 45
+                      name:
+                        type: string
+                        example: "Паркування"
+                  subject:
+                    type: string
+                    example: "Порушник"
+                  deskription:
+                    type: string
+                    example: "Це авто порушило"
+                  status:
+                    type: string
+                    example: "Нова"
+                  statusItem:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 2
+                      name:
+                        type: string
+                        example: "Нова"
+                  created:
+                    type: string
+                    format: date-time
+                    example: "2024-09-28T12:51:30+03:00"
+                  projectId:
+                    type: integer
+                    example: 4
+                  address:
+                    type: object
+                    properties:
+                      houseNum:
+                        type: string
+                        example: "1"
+                      flatNumber:
+                        type: string
+                        example: "111"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - gek
+  /api/Gek/getIssueCategories:
+    get:
+      summary: Get issue categories for a specific complex
+      description: Fetches a list of issue categories associated with the given `complexId`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: complexId
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: The ID of the complex for which to fetch issue categories.
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: Successful response with issue categories.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 14
+                      description: The ID of the issue category.
+                    name:
+                      type: string
+                      example: "Відгуки та пропозиції"
+                      description: The name of the issue category.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - gek
+  /api/Gek/addIssueNotesWithAttachment:
+    post:
+      summary: Add notes with an attachment to an issue
+      description: Allows users to add notes and upload an attachment for an existing issue.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  description: The image files to be attached to the note.
+                  items:
+                    type: string
+                    format: binary
+                issueId:
+                  type: string
+                  description: The ID of the issue to which the note will be added.
+                  example: "11111"
+                notes:
+                  type: string
+                  description: The note or comment to be added to the issue.
+                  example: "коментар"
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: Note successfully added to the issue.
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - gek
+  /api/Gek/changeIssueStatusById:
+    post:
+      summary: Change the status of an issue by its ID
+      description: Allows users to change the status of an existing issue by providing the issue ID and the new status ID.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                issueId:
+                  type: string
+                  description: The ID of the issue for which the status is being changed.
+                  example: "11111"
+                statusId:
+                  type: integer
+                  description: The ID of the new status.
+                  example: 8
+      parameters:
+        - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: Issue status changed successfully.
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      tags:
+        - gek
