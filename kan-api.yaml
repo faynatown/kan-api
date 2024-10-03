@@ -433,7 +433,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
       tags:
         - gek
-  # yep, letter letter "с" in "сreateIssueWithAttachment" is cyrillic, so we need to encode it as %D1%81 
+  # yep, letter "с" in "сreateIssueWithAttachment" is cyrillic, so we need to encode it as %D1%81 
   /api/gek/%D1%81reateIssueWithAttachment:
     post:
       summary: Create an issue with an attachment
